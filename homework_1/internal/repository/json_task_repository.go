@@ -70,17 +70,15 @@ func (r *JSONTaskRepository) Get(id domain.TaskID) (domain.Task, error) {
 	return task, nil
 }
 
-func (r *JSONTaskRepository) UpdateStatus(id domain.TaskID, status domain.TaskStatus) (domain.Task, error) {
-	task, exists := r.Tasks[id]
+func (r *JSONTaskRepository) Update(changedTask domain.Task) (domain.Task, error) {
+	task, exists := r.Tasks[changedTask.ID]
 	if !exists {
 		return domain.Task{}, domain.ErrorTaskNotFound
 	}
-	tmpStatus := task.Status
-	task.Status = status
-	r.Tasks[id] = task
+	tmpTask := task
+	r.Tasks[changedTask.ID] = changedTask
 	if err := r.saveJSON(); err != nil {
-		task.Status = tmpStatus
-		r.Tasks[id] = task
+		r.Tasks[changedTask.ID] = tmpTask
 
 		return domain.Task{}, err
 	}

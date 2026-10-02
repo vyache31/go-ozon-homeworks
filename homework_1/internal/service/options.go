@@ -14,7 +14,8 @@ type TaskListOptions struct {
 	Search  string
 }
 
-type TaskChangeOptions struct {
+type TaskUpdateOptions struct {
 	Title    string
+	Status   domain.TaskStatus
 	Deadline time.Time
 }
