@@ -3,7 +3,7 @@ package service
 import (
 	"time"
 
-	"github.com/vyache31/todo/internal/domain"
+	"github.com/vyache31/go-ozon-homeworks/homework_1/internal/domain"
 )
 
 type TaskListOptions struct {

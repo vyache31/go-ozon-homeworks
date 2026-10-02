@@ -1,6 +1,6 @@
 package service
 
-import "github.com/vyache31/todo/internal/domain"
+import "github.com/vyache31/go-ozon-homeworks/homework_1/internal/domain"
 
 type TaskRepository interface {
 	Create(task domain.Task) (domain.Task, error)
