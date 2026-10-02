@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/vyache31/todo/internal/domain"
+	"github.com/vyache31/go-ozon-homeworks/homework_1/internal/domain"
 )
 
 type JSONTaskRepository struct {
@@ -64,7 +64,7 @@ func (r *JSONTaskRepository) List() ([]domain.Task, error) {
 func (r *JSONTaskRepository) Get(id domain.TaskID) (domain.Task, error) {
 	task, exists := r.Tasks[id]
 	if !exists {
-		return domain.Task{}, fmt.Errorf("task with id: %d does not exists", id)
+		return domain.Task{}, domain.ErrorTaskNotFound
 	}
 
 	return task, nil
@@ -73,7 +73,7 @@ func (r *JSONTaskRepository) Get(id domain.TaskID) (domain.Task, error) {
 func (r *JSONTaskRepository) UpdateStatus(id domain.TaskID, status domain.TaskStatus) (domain.Task, error) {
 	task, exists := r.Tasks[id]
 	if !exists {
-		return domain.Task{}, fmt.Errorf("task with id: %d does not exists", id)
+		return domain.Task{}, domain.ErrorTaskNotFound
 	}
 	tmpStatus := task.Status
 	task.Status = status
@@ -91,7 +91,7 @@ func (r *JSONTaskRepository) UpdateStatus(id domain.TaskID, status domain.TaskSt
 func (r *JSONTaskRepository) Delete(id domain.TaskID) error {
 	task, exists := r.Tasks[id]
 	if !exists {
-		return fmt.Errorf("task with id: %d does not exists", id)
+		return domain.ErrorTaskNotFound
 	}
 	delete(r.Tasks, id)
 
@@ -106,11 +106,11 @@ func (r *JSONTaskRepository) Delete(id domain.TaskID) error {
 func uploadJSON(path string, repo *JSONTaskRepository) error {
 	file, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read JSON: %w", err)
 	}
 	err = json.Unmarshal(file, repo)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
 	return nil
@@ -120,15 +120,15 @@ func (r *JSONTaskRepository) saveJSON() error {
 	newJSON, err := json.Marshal(r)
 	tmpPath := r.path + ".tmp"
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to serialize tasks in JSON: %w", err)
 	}
 
 	if err := os.WriteFile(tmpPath, newJSON, 0644); err != nil {
-		return err
+		return fmt.Errorf("failed to save temp JSON: %w", err)
 	}
 
 	if err := os.Rename(tmpPath, r.path); err != nil {
-		return err
+		return fmt.Errorf("failed to rename temp JSON to main file: %w", err)
 	}
 	return nil
 }

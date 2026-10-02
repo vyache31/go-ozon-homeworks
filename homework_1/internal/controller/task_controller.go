@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/vyache31/todo/internal/domain"
-	"github.com/vyache31/todo/internal/service"
+	"github.com/vyache31/go-ozon-homeworks/homework_1/internal/domain"
+	"github.com/vyache31/go-ozon-homeworks/homework_1/internal/service"
 )
 
 type TaskService interface {
