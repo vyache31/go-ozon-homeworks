@@ -12,10 +12,10 @@ import (
 
 type TaskService interface {
 	CreateTask(input domain.CreateTaskInput) error
-	List(opts service.TaskListOptions) ([]domain.Task, error)
+	List(opts service.TaskListOptions) (domain.ListTaskOutput, error)
 	Get(id domain.TaskID) (domain.Task, error)
-	UpdateStatus(id domain.TaskID, status domain.TaskStatus) error
-	Update(opts service.TaskChangeOptions) error
+	UpdateStatus(id domain.TaskID, status domain.TaskStatus) (domain.Task, error)
+	Update(id domain.TaskID, opts service.TaskUpdateOptions) (domain.Task, error)
 	Delete(id domain.TaskID) error
 }
 

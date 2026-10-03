@@ -38,3 +38,8 @@ type CreateTaskInput struct {
 	Title    string
 	Deadline time.Time
 }
+
+type ListTaskOutput struct {
+	Tasks      []Task
+	TotalPages int
+}
