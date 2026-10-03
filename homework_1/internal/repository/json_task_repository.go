@@ -1,11 +1,16 @@
 package repository
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
+	"strings"
+	"time"
 
 	"github.com/vyache31/go-ozon-homeworks/homework_1/internal/domain"
+	"github.com/vyache31/go-ozon-homeworks/homework_1/internal/service"
 )
 
 type JSONTaskRepository struct {
@@ -29,7 +34,7 @@ func NewFileTaskRepository(path string) *JSONTaskRepository {
 		repo.path = path
 		return repo
 	} else {
-		panic(err.Error())
+		panic(fmt.Errorf("failed to create a NewFileTaskRepository: %w", err))
 	}
 }
 
@@ -52,13 +57,41 @@ func (r *JSONTaskRepository) Create(task domain.Task) (domain.Task, error) {
 	return newTask, nil
 }
 
-func (r *JSONTaskRepository) List() ([]domain.Task, error) {
-	sliceTasks := make([]domain.Task, 0, len(r.Tasks))
+func (r *JSONTaskRepository) List(opts service.TaskListOptions) ([]domain.Task, int, error) {
+	filteredTasks := make([]domain.Task, 0, len(r.Tasks))
 	for _, task := range r.Tasks {
-		sliceTasks = append(sliceTasks, task)
+		if opts.Search != "" && !strings.Contains(task.Title, opts.Search) {
+			continue
+		}
+		if opts.Overdue && !task.IsOverdue(time.Now()) {
+			continue
+		}
+		if opts.Status != nil && *opts.Status != task.Status {
+			continue
+		}
+
+		filteredTasks = append(filteredTasks, task)
+	}
+	total := len(filteredTasks)
+	offset := (opts.Page - 1) * opts.Limit
+
+	if offset >= total {
+		return []domain.Task{}, total, nil
 	}
 
-	return sliceTasks, nil
+	end := offset + opts.Limit
+	if end > total {
+		end = total
+	}
+	slices.SortFunc(filteredTasks, func(a, b domain.Task) int {
+		if result := a.Deadline.Compare(b.Deadline); result != 0 {
+			return result
+		}
+
+		return cmp.Compare(a.ID, b.ID)
+	})
+
+	return filteredTasks[offset:end], total, nil
 }
 
 func (r *JSONTaskRepository) Get(id domain.TaskID) (domain.Task, error) {

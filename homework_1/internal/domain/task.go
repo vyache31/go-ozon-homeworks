@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 type TaskID uint
 
@@ -18,6 +20,15 @@ type Task struct {
 	Title    string
 	Status   TaskStatus
 	Deadline time.Time
+}
+
+func (t Task) IsOverdue(tm time.Time) bool {
+	if t.Deadline.Before(tm) &&
+		t.Status != StatusDone &&
+		t.Status != StatusCanceled {
+		return true
+	}
+	return false
 }
 
 // при расширении параметров, передаваемых при создании задач,
