@@ -25,7 +25,7 @@ func NewService(repo TaskRepository) *TaskService {
 
 func (ts *TaskService) Create(input domain.CreateTaskInput) (domain.Task, error) {
 	if err := ts.validateTaskFields(input.Title, input.Deadline); err != nil {
-		return domain.Task{}, fmt.Errorf("create task %w:", err)
+		return domain.Task{}, fmt.Errorf("create task: %w", err)
 	}
 
 	newTask, err := ts.repo.Create(domain.Task{
@@ -55,20 +55,40 @@ func (ts *TaskService) List(opts TaskListOptions) (domain.ListTaskOutput, error)
 	if err != nil {
 		return domain.ListTaskOutput{}, fmt.Errorf("get list: %w", err)
 	}
+
+	if opts.Page == 0 {
+		opts.Page = 1
+	}
+	if opts.Limit == 0 {
+		opts.Limit = 20
+	}
+
 	filteredTasks, total, err := ts.repo.List(opts)
 	if err != nil {
 		return domain.ListTaskOutput{}, fmt.Errorf("get list: %w", err)
 	}
+	if total == 0 {
+		return domain.ListTaskOutput{}, fmt.Errorf("get list: %w", domain.ErrorTasksNotFound)
+	}
 
-	totalPages := total / opts.Limit
+	totalPages := (total + opts.Limit - 1) / opts.Limit
+	if opts.Page > totalPages {
+		return domain.ListTaskOutput{}, fmt.Errorf("get list: %w", domain.ErrorOptsValidatePage)
+	}
 
 	return domain.ListTaskOutput{
 		Tasks:      filteredTasks,
+		Limit:      opts.Limit,
+		Page:       opts.Page,
 		TotalPages: totalPages,
 	}, nil
 }
 
 func (ts *TaskService) UpdateStatus(id domain.TaskID, newStatus domain.TaskStatus) (domain.Task, error) {
+	newStatus, err := domain.ParseTaskStatus(string(newStatus))
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("update status: %w", err)
+	}
 	task, err := ts.repo.Get(id)
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("update status task %d: %w", id, err)
@@ -106,12 +126,18 @@ func (ts *TaskService) Update(id domain.TaskID, opts TaskUpdateOptions) (domain.
 	}
 
 	changedTask := domain.Task{
-		ID:     task.ID,
-		Title:  task.Title,
-		Status: task.Status,
+		ID:       task.ID,
+		Title:    opts.Title,
+		Status:   task.Status,
+		Deadline: task.Deadline,
 	}
 	if !opts.Deadline.IsZero() {
 		changedTask.Deadline = opts.Deadline
+	}
+
+	changedTask, err = ts.repo.Update(changedTask)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("update task: %w", err)
 	}
 	return changedTask, nil
 }
@@ -129,7 +155,7 @@ func (ts *TaskService) validateTaskFields(title string, deadline time.Time) erro
 	if title == "" {
 		return domain.ErrorTaskValidateTitle
 	}
-	if time.Time.Before(deadline, time.Now()) || deadline.IsZero() {
+	if !deadline.IsZero() && time.Time.Before(deadline, time.Now()) {
 		return domain.ErrorTaskValidateDeadline
 	}
 
@@ -143,6 +169,10 @@ func (ts *TaskService) validateListOptions(opts TaskListOptions) error {
 	if opts.Limit < 0 || opts.Limit > 100 {
 		return fmt.Errorf("%w: limit must be between 1 and 100", domain.ErrorOptsValidateLimit)
 	}
-
+	if opts.Status != nil {
+		if _, err := domain.ParseTaskStatus(string(*opts.Status)); err != nil {
+			return fmt.Errorf("validate status: %w", err)
+		}
+	}
 	return nil
 }

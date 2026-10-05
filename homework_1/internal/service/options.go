@@ -16,6 +16,5 @@ type TaskListOptions struct {
 
 type TaskUpdateOptions struct {
 	Title    string
-	Status   domain.TaskStatus
 	Deadline time.Time
 }

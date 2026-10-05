@@ -46,13 +46,13 @@ func (r *JSONTaskRepository) Create(task domain.Task) (domain.Task, error) {
 		Deadline: task.Deadline,
 	}
 	r.Tasks[newTask.ID] = newTask
-
+	r.NextID++
 	if err := r.saveJSON(); err != nil {
+		r.NextID--
 		delete(r.Tasks, r.NextID)
 
 		return domain.Task{}, err
 	}
-	r.NextID++
 
 	return newTask, nil
 }
@@ -60,7 +60,7 @@ func (r *JSONTaskRepository) Create(task domain.Task) (domain.Task, error) {
 func (r *JSONTaskRepository) List(opts service.TaskListOptions) ([]domain.Task, int, error) {
 	filteredTasks := make([]domain.Task, 0, len(r.Tasks))
 	for _, task := range r.Tasks {
-		if opts.Search != "" && !strings.Contains(task.Title, opts.Search) {
+		if opts.Search != "" && !strings.Contains(strings.ToLower(task.Title), strings.ToLower(opts.Search)) {
 			continue
 		}
 		if opts.Overdue && !task.IsOverdue(time.Now()) {
@@ -116,7 +116,7 @@ func (r *JSONTaskRepository) Update(changedTask domain.Task) (domain.Task, error
 		return domain.Task{}, err
 	}
 
-	return task, nil
+	return changedTask, nil
 }
 
 func (r *JSONTaskRepository) Delete(id domain.TaskID) error {

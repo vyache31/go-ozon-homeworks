@@ -15,6 +15,16 @@ const (
 	StatusDone       TaskStatus = "done"
 )
 
+func ParseTaskStatus(s string) (TaskStatus, error) {
+	status := TaskStatus(s)
+	switch status {
+	case StatusPlanned, StatusDone, StatusCanceled, StatusInProgress:
+		return status, nil
+	default:
+		return "", ErrorStatusNotExist
+	}
+}
+
 type Task struct {
 	ID       TaskID
 	Title    string
@@ -41,5 +51,7 @@ type CreateTaskInput struct {
 
 type ListTaskOutput struct {
 	Tasks      []Task
+	Page       int
+	Limit      int
 	TotalPages int
 }
