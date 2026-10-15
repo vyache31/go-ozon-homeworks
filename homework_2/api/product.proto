@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package product;
+option go_package = "github.com/vyache31/go-ozon-homeworks/homework_2/pkg/api;product";
+
+service Product {
+  rpc GetProduct (GetProductRequest) returns (GetProductResponse) {}
+}
+
+message GetProductRequest {
+  uint32 sku = 1;
+}
+
+message GetProductResponse {
+  uint32 sku = 1;
+  string name = 2;
+  int32  price = 3;
+}
