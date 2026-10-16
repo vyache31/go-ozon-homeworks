@@ -30,7 +30,7 @@ func NewJSONProductRepository(path string) *JSONProductRepository {
 		if err := uploadJSON(path, repo); err != nil {
 			log.Fatalf("Failed to upload json file: %v", err)
 		}
-		log.Printf("GRPC Service: successfull uploading product info: %v", repo)
+		log.Print("Product data uploaded")
 		repo.path = path
 		return repo
 	} else {
