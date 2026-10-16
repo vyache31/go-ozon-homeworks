@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	log.Println("Starting Cart service..")
+	log.SetPrefix("[CART] ")
+	log.Println("Starting HTTP server..")
 	mux := http.NewServeMux()
 	cartService, err := cart.NewCartService()
 	if err != nil {
@@ -16,8 +17,18 @@ func main() {
 	}
 	cartHandler := cart.NewCartHandler(cartService)
 
+	mux.Handle("GET /docs/{$}", serveBytes("text/html; charset=utf-8", docsHTML))
+	mux.Handle("GET /swagger.json", serveBytes("application/json", openAPIyaml))
+
 	mux.HandleFunc("/user/{user_id}/cart", cartHandler.GetCart)
 	mux.HandleFunc("/user/{user_id}/cart/{sku_id}", cartHandler.PostProduct)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+func serveBytes(contentType string, body []byte) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", contentType)
+		_, _ = w.Write(body)
+	})
 }

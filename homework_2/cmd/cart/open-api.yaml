@@ -1,0 +1,43 @@
+openapi: 3.0.3
+info:
+  title: Cart API
+  version: 1.0.0
+
+paths:
+  /user/{user_id}/cart:
+    get:
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+
+  /user/{user_id}/cart/{sku_id}:
+    post:
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sku_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                count:
+                  type: integer
+      responses:
+        '200':
+          description: OK
