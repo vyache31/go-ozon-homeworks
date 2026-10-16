@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	log.Println("Starting Product service..")
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
