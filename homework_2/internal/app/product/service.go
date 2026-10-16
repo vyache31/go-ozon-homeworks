@@ -35,7 +35,7 @@ func (s *ProductService) GetProduct(ctx context.Context, in *pb.GetProductReques
 	if errors.Is(err, domain.ErrorProductNotFound) {
 		return nil, status.Error(codes.NotFound, err.Error())
 	} else if err != nil {
-		return nil, status.Error(codes.Internal, domain.ErrorInternal.Error())
+		return nil, status.Error(codes.Internal, domain.ErrorProductInternal.Error())
 	}
 
 	reponse := pb.GetProductResponse{

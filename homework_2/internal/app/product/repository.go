@@ -30,6 +30,7 @@ func NewJSONProductRepository(path string) *JSONProductRepository {
 		if err := uploadJSON(path, repo); err != nil {
 			log.Fatalf("Failed to upload json file: %v", err)
 		}
+		log.Printf("GRPC Service: successfull uploading product info: %v", repo)
 		repo.path = path
 		return repo
 	} else {
@@ -55,7 +56,7 @@ func uploadJSON(path string, repo *JSONProductRepository) error {
 	if err != nil {
 		return fmt.Errorf("failed to read JSON: %w", err)
 	}
-	err = json.Unmarshal(file, repo)
+	err = json.Unmarshal(file, &repo.Products)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
