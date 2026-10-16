@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/vyache31/go-ozon-homeworks/homework_2/internal/app/cart"
 )
@@ -23,12 +24,22 @@ func main() {
 	mux.HandleFunc("/user/{user_id}/cart", cartHandler.GetCart)
 	mux.HandleFunc("/user/{user_id}/cart/{sku_id}", cartHandler.PostProduct)
 
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":8080", loggingMiddleware(mux)))
 }
 
 func serveBytes(contentType string, body []byte) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", contentType)
 		_, _ = w.Write(body)
+	})
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		next.ServeHTTP(w, r)
+
+		log.Printf("%s %s %v", r.Method, r.RequestURI, time.Since(start))
 	})
 }
