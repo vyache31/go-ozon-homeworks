@@ -61,7 +61,7 @@ func (s *CartService) PostProduct(ctx context.Context, in domain.PostProductRequ
 
 	position, exists := userCart.Positions[domain.ProductSKU(product.Sku)]
 	if exists {
-		position.Count += 1
+		position.Count += in.Count
 	} else {
 		position = domain.Position{
 			Product: domain.Product{
@@ -69,12 +69,12 @@ func (s *CartService) PostProduct(ctx context.Context, in domain.PostProductRequ
 				Name:  product.Name,
 				Price: uint32(product.Price),
 			},
-			Count: 1,
+			Count: in.Count,
 		}
 	}
 
 	userCart.Positions[domain.ProductSKU(product.Sku)] = position
-	userCart.TotalPrice += uint32(product.Price)
+	userCart.TotalPrice += uint32(product.Price) * in.Count
 	s.usersCarts[domain.UserID(in.UserID)] = userCart
 
 	return nil
