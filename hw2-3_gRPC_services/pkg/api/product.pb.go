@@ -138,7 +138,7 @@ const file_api_product_proto_rawDesc = "" +
 	"\x05price\x18\x03 \x01(\x05R\x05price2R\n" +
 	"\aProduct\x12G\n" +
 	"\n" +
-	"GetProduct\x12\x1a.product.GetProductRequest\x1a\x1b.product.GetProductResponse\"\x00BBZ@github.com/vyache31/go-ozon-homeworks/homework_2/pkg/api;productb\x06proto3"
+	"GetProduct\x12\x1a.product.GetProductRequest\x1a\x1b.product.GetProductResponse\"\x00BKZIgithub.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/pkg/api;productb\x06proto3"
 
 var (
 	file_api_product_proto_rawDescOnce sync.Once

@@ -7,9 +7,9 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/vyache31/go-ozon-homeworks/homework_2/internal/app/product"
-	"github.com/vyache31/go-ozon-homeworks/homework_2/internal/domain"
-	pb "github.com/vyache31/go-ozon-homeworks/homework_2/pkg/api"
+	"github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/internal/app/product"
+	"github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/internal/domain"
+	pb "github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/pkg/api"
 )
 
 type ProductGetter interface {

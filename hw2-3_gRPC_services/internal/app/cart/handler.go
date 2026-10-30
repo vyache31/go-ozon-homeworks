@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/vyache31/go-ozon-homeworks/homework_2/internal/domain"
+	"github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/internal/domain"
 )
 
 type CartHandler struct {

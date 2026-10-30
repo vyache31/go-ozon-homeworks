@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vyache31/go-ozon-homeworks/homework_2/internal/app/cart"
+	"github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/internal/app/cart"
 )
 
 func main() {

@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/vyache31/go-ozon-homeworks/homework_2/internal/app/product"
-	pb "github.com/vyache31/go-ozon-homeworks/homework_2/pkg/api"
+	"github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/internal/app/product"
+	pb "github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/pkg/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
