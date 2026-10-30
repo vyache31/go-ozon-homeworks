@@ -34,6 +34,9 @@ func (ch *CartHandler) GetCart(w http.ResponseWriter, r *http.Request) {
 	} else if errors.Is(err, domain.ErrorUserInvalidID) {
 		ch.writeError(w, http.StatusBadRequest, err.Error())
 		return
+	} else if errors.Is(err, domain.ErrorProductNotFound) {
+		ch.writeError(w, http.StatusPreconditionFailed, err.Error())
+		return
 	} else if err != nil {
 		ch.writeError(w, http.StatusInternalServerError, "неизвестная ошибка")
 		log.Printf("ERROR: CartHandler: %v", err)

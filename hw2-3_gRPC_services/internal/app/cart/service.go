@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/internal/app/product"
 	"github.com/vyache31/go-ozon-homeworks/hw2-3_gRPC_services/internal/domain"
@@ -15,6 +16,8 @@ import (
 type ProductGetter interface {
 	GetProduct(context.Context, domain.ProductSKU) (*pb.GetProductResponse, error)
 }
+
+const productRequestTimeout = 5 * time.Second
 
 type CartService struct {
 	usersCarts map[domain.UserID]domain.Cart
@@ -47,7 +50,10 @@ func (s *CartService) PostProduct(ctx context.Context, in domain.PostProductRequ
 		return domain.ErrorPositionInvalidCount
 	}
 
-	product, err := s.products.GetProduct(ctx, domain.ProductSKU(in.ProductSKU))
+	productCtx, cancel := context.WithTimeout(ctx, productRequestTimeout)
+	defer cancel()
+
+	product, err := s.products.GetProduct(productCtx, domain.ProductSKU(in.ProductSKU))
 	if err != nil {
 		return fmt.Errorf("failed to check product: %w", err)
 	}
@@ -87,9 +93,8 @@ func (s *CartService) GetProduct(ctx context.Context, in domain.GetProductReques
 
 	s.mu.RLock()
 	cart, exists := s.usersCarts[domain.UserID(in.UserID)]
-	s.mu.RUnlock()
-
 	if !exists {
+		s.mu.RUnlock()
 		return domain.GetProductResponse{}, domain.ErrorCartNoExistsOrEmpty
 	}
 
@@ -102,12 +107,47 @@ func (s *CartService) GetProduct(ctx context.Context, in domain.GetProductReques
 			Count: position.Count,
 		})
 	}
+	s.mu.RUnlock()
+
+	if len(items) == 0 {
+		return domain.GetProductResponse{}, domain.ErrorCartNoExistsOrEmpty
+	}
+
 	slices.SortFunc(items, func(a, b domain.Item) int {
 		return cmp.Compare(a.Sku, b.Sku)
 	})
 
+	ctx, cancel := context.WithTimeout(ctx, productRequestTimeout)
+	defer cancel()
+
+	products := make([]*pb.GetProductResponse, len(items))
+	errs := make([]error, len(items))
+	var wg sync.WaitGroup
+	for i := range items {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			products[i], errs[i] = s.products.GetProduct(ctx, domain.ProductSKU(items[i].Sku))
+		}(i)
+	}
+	wg.Wait()
+
+	var totalPrice uint32
+	for i, product := range products {
+		if errs[i] != nil {
+			return domain.GetProductResponse{}, fmt.Errorf("failed to get product: %w", errs[i])
+		}
+		if product == nil {
+			return domain.GetProductResponse{}, fmt.Errorf("failed to get product: empty response")
+		}
+
+		items[i].Name = product.Name
+		items[i].Price = uint32(product.Price)
+		totalPrice += items[i].Price * items[i].Count
+	}
+
 	return domain.GetProductResponse{
 		Items:      items,
-		TotalPrice: cart.TotalPrice,
+		TotalPrice: totalPrice,
 	}, nil
 }
