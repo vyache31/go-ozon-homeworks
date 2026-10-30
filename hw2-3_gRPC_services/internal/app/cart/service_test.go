@@ -3,6 +3,8 @@ package cart
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -128,6 +130,7 @@ func TestGetProduct(t *testing.T) {
 		userID  int64
 		setup   []domain.PostProductRequest
 		getter  testProductGetter
+		getErr  error
 		want    domain.GetProductResponse
 		wantErr error
 	}{
@@ -160,6 +163,18 @@ func TestGetProduct(t *testing.T) {
 				TotalPrice: 1850,
 			},
 		},
+		{
+			name:   "product disappeared",
+			userID: 1,
+			setup: []domain.PostProductRequest{
+				{UserID: 1, ProductSKU: 42, Count: 1},
+			},
+			getter: testProductGetter{products: map[domain.ProductSKU]*pb.GetProductResponse{
+				42: {Sku: 42, Name: "Display", Price: 700},
+			}},
+			getErr:  domain.ErrorProductNotFound,
+			wantErr: domain.ErrorProductNotFound,
+		},
 	}
 
 	for _, tt := range tests {
@@ -169,6 +184,9 @@ func TestGetProduct(t *testing.T) {
 			service := newTestService(tt.getter)
 			for _, req := range tt.setup {
 				require.NoError(t, service.PostProduct(context.Background(), req))
+			}
+			if tt.getErr != nil {
+				service.products = testProductGetter{err: tt.getErr}
 			}
 
 			got, err := service.GetProduct(context.Background(), domain.GetProductRequest{UserID: tt.userID})
@@ -182,4 +200,24 @@ func TestGetProduct(t *testing.T) {
 			require.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestGetCartProductError(t *testing.T) {
+	t.Parallel()
+
+	service := newTestService(testProductGetter{products: map[domain.ProductSKU]*pb.GetProductResponse{
+		123: {Sku: 123, Name: "Book", Price: 500},
+	}})
+	require.NoError(t, service.PostProduct(context.Background(), domain.PostProductRequest{
+		UserID: 1, ProductSKU: 123, Count: 1,
+	}))
+	service.products = testProductGetter{err: domain.ErrorProductNotFound}
+
+	request := httptest.NewRequest(http.MethodGet, "/user/1/cart", nil)
+	request.SetPathValue("user_id", "1")
+	response := httptest.NewRecorder()
+
+	NewCartHandler(service).GetCart(response, request)
+
+	require.Equal(t, http.StatusPreconditionFailed, response.Code)
 }

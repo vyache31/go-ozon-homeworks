@@ -10,3 +10,11 @@ run-all:
 	@go run ./cmd/product & \
 	go run ./cmd/cart & \
 	wait
+
+.PHONY:test-api
+test-api:
+	go test -v -count=1 -tags=api ./test/
+
+.PHONY:test-race
+test-race:
+	go test -race ./...
